@@ -1,9 +1,4 @@
-/*
- * This code and all components (c) Copyright 2019-2020, Wowza Media Systems, LLC. All rights reserved.
- * This code is licensed pursuant to the BSD 3-Clause License.
- */
-
-import adapter from 'webrtc-adapter';
+import adapter from "webrtc-adapter";
 
 const browserDetails = adapter.browserDetails;
 
@@ -15,27 +10,26 @@ let audioIndex;
 
 function addAudio(sdpStr, audioLine) {
   let sdpLines = sdpStr.split(/\r\n/);
-  let sdpSection = '';
-  let sdpStrRet = '';
+  let sdpSection = "";
+  let sdpStrRet = "";
   let done = false;
 
   for (let sdpIndex in sdpLines) {
     let sdpLine = sdpLines[sdpIndex];
 
-    if (sdpLine.length <= 0)
-      continue;
+    if (sdpLine.length <= 0) continue;
 
-    if (sdpLine.indexOf('m=audio') === 0) {
-      sdpSection = 'audio';
-    } else if (sdpLine.indexOf('m=video') === 0) {
-      sdpSection = 'video';
+    if (sdpLine.indexOf("m=audio") === 0) {
+      sdpSection = "audio";
+    } else if (sdpLine.indexOf("m=video") === 0) {
+      sdpSection = "video";
     }
-  
-    sdpStrRet += sdpLine;
-    sdpStrRet += '\r\n';
 
-    if (sdpSection === 'audio') {
-      if ('a=rtcp-mux'.localeCompare(sdpLine) === 0 && done === false) {
+    sdpStrRet += sdpLine;
+    sdpStrRet += "\r\n";
+
+    if (sdpSection === "audio") {
+      if ("a=rtcp-mux".localeCompare(sdpLine) === 0 && done === false) {
         sdpStrRet += audioLine;
         done = true;
       }
@@ -46,7 +40,7 @@ function addAudio(sdpStr, audioLine) {
 
 function addVideo(sdpStr, videoLine) {
   let sdpLines = sdpStr.split(/\r\n/);
-  let sdpStrRet = '';
+  let sdpStrRet = "";
   let done = false;
 
   let rtcpSize = false;
@@ -54,35 +48,44 @@ function addVideo(sdpStr, videoLine) {
   for (let sdpIndex in sdpLines) {
     let sdpLine = sdpLines[sdpIndex];
 
-    if (sdpLine.length <= 0)
-      continue;
+    if (sdpLine.length <= 0) continue;
 
     if (sdpLine.includes("a=rtcp-rsize")) {
       rtcpSize = true;
     }
-
   }
 
   for (let sdpIndex in sdpLines) {
     let sdpLine = sdpLines[sdpIndex];
 
     sdpStrRet += sdpLine;
-    sdpStrRet += '\r\n';
+    sdpStrRet += "\r\n";
 
-    if (('a=rtcp-rsize'.localeCompare(sdpLine) === 0) && done === false && rtcpSize === true) {
+    if (
+      "a=rtcp-rsize".localeCompare(sdpLine) === 0 &&
+      done === false &&
+      rtcpSize === true
+    ) {
       sdpStrRet += videoLine;
       done = true;
     }
 
-    if ('a=rtcp-mux'.localeCompare(sdpLine) === 0 && done === true && rtcpSize === false) {
+    if (
+      "a=rtcp-mux".localeCompare(sdpLine) === 0 &&
+      done === true &&
+      rtcpSize === false
+    ) {
       sdpStrRet += videoLine;
       done = true;
     }
 
-    if ('a=rtcp-mux'.localeCompare(sdpLine) === 0 && done === false && rtcpSize === false) {
+    if (
+      "a=rtcp-mux".localeCompare(sdpLine) === 0 &&
+      done === false &&
+      rtcpSize === false
+    ) {
       done = true;
     }
-
   }
   return sdpStrRet;
 }
@@ -129,11 +132,15 @@ function deliverCheckLine(profile, type) {
       return lineInUse;
     }
   }
-  return '';
+  return "";
 }
 
 function checkLine(line) {
-  if (line.startsWith("a=rtpmap") || line.startsWith("a=rtcp-fb") || line.startsWith("a=fmtp")) {
+  if (
+    line.startsWith("a=rtpmap") ||
+    line.startsWith("a=rtcp-fb") ||
+    line.startsWith("a=fmtp")
+  ) {
     let res = line.split(":");
 
     if (res.length > 1) {
@@ -156,13 +163,12 @@ function checkLine(line) {
 }
 
 function getrtpMapID(line) {
-  let findid = new RegExp('a=rtpmap:(\\d+) (\\w+)/(\\d+)');
+  let findid = new RegExp("a=rtpmap:(\\d+) (\\w+)/(\\d+)");
   let found = line.match(findid);
-  return (found && found.length >= 3) ? found : null;
+  return found && found.length >= 3 ? found : null;
 }
 
 export function mungeSDPPublish(sdpStr, mungeData) {
-
   SDPOutput = {};
   videoChoice = "42e01f";
   audioChoice = "opus";
@@ -171,53 +177,65 @@ export function mungeSDPPublish(sdpStr, mungeData) {
 
   let sdpLines = sdpStr.split(/\r\n/);
 
-  let sdpSection = 'header';
+  let sdpSection = "header";
   let hitMID = false;
-  let sdpStrRet = '';
+  let sdpStrRet = "";
 
-  if (mungeData.videoCodec != null && mungeData.videoCodec !== '')
+  if (mungeData.videoCodec != null && mungeData.videoCodec !== "")
     videoChoice = mungeData.videoCodec;
-  if (mungeData.audioCodec != null && mungeData.audioCodec !== '')
+  if (mungeData.audioCodec != null && mungeData.audioCodec !== "")
     audioChoice = mungeData.audioCodec;
 
   // Deliver the requested codecs
   for (let sdpIndex in sdpLines) {
     let sdpLine = sdpLines[sdpIndex];
 
-    if (sdpLine.length <= 0)
-      continue;
+    if (sdpLine.length <= 0) continue;
 
     let doneCheck = checkLine(sdpLine);
-    if (!doneCheck)
-      continue;
+    if (!doneCheck) continue;
 
     sdpStrRet += sdpLine;
-    sdpStrRet += '\r\n';
-
+    sdpStrRet += "\r\n";
   }
   sdpStrRet = addAudio(sdpStrRet, deliverCheckLine(audioChoice, "audio"));
   sdpStrRet = addVideo(sdpStrRet, deliverCheckLine(videoChoice, "video"));
   sdpStr = sdpStrRet;
   sdpLines = sdpStr.split(/\r\n/);
-  sdpStrRet = '';
+  sdpStrRet = "";
 
   for (let sdpIndex in sdpLines) {
     let sdpLine = sdpLines[sdpIndex];
 
-    if (sdpLine.length <= 0)
-      continue;
+    if (sdpLine.length <= 0) continue;
 
-    if (browserDetails.browser === 'chrome') {
+    if (browserDetails.browser === "chrome") {
       let audioMLines;
       if (sdpLine.indexOf("m=audio") === 0 && audioIndex !== -1) {
         audioMLines = sdpLine.split(" ");
-        sdpStrRet += audioMLines[0] + " " + audioMLines[1] + " " + audioMLines[2] + " " + audioIndex + "\r\n";
+        sdpStrRet +=
+          audioMLines[0] +
+          " " +
+          audioMLines[1] +
+          " " +
+          audioMLines[2] +
+          " " +
+          audioIndex +
+          "\r\n";
         continue;
       }
 
       if (sdpLine.indexOf("m=video") === 0 && videoIndex !== -1) {
         audioMLines = sdpLine.split(" ");
-        sdpStrRet += audioMLines[0] + " " + audioMLines[1] + " " + audioMLines[2] + " " + videoIndex + "\r\n";
+        sdpStrRet +=
+          audioMLines[0] +
+          " " +
+          audioMLines[1] +
+          " " +
+          audioMLines[2] +
+          " " +
+          videoIndex +
+          "\r\n";
         continue;
       }
     }
@@ -225,54 +243,77 @@ export function mungeSDPPublish(sdpStr, mungeData) {
     sdpStrRet += sdpLine;
 
     if (sdpLine.indexOf("m=audio") === 0) {
-      sdpSection = 'audio';
+      sdpSection = "audio";
       hitMID = false;
-    }
-    else if (sdpLine.indexOf("m=video") === 0) {
-      sdpSection = 'video';
+    } else if (sdpLine.indexOf("m=video") === 0) {
+      sdpSection = "video";
       hitMID = false;
-    }
-    else if (sdpLine.indexOf("a=rtpmap") === 0) {
-      sdpSection = 'bandwidth';
+    } else if (sdpLine.indexOf("a=rtpmap") === 0) {
+      sdpSection = "bandwidth";
       hitMID = false;
     }
 
-    if (browserDetails.browser === 'chrome') {
-      if (sdpLine.indexOf("a=mid:") === 0 || sdpLine.indexOf("a=rtpmap") === 0) {
+    if (browserDetails.browser === "chrome") {
+      if (
+        sdpLine.indexOf("a=mid:") === 0 ||
+        sdpLine.indexOf("a=rtpmap") === 0
+      ) {
         if (!hitMID) {
-          if ('audio'.localeCompare(sdpSection) === 0) {
+          if ("audio".localeCompare(sdpSection) === 0) {
             if (mungeData.audioBitrate !== undefined) {
-              sdpStrRet += '\r\nb=CT:' + (mungeData.audioBitrate);
-              sdpStrRet += '\r\nb=AS:' + (mungeData.audioBitrate);
+              sdpStrRet += "\r\nb=CT:" + mungeData.audioBitrate;
+              sdpStrRet += "\r\nb=AS:" + mungeData.audioBitrate;
             }
             hitMID = true;
-          }
-          else if ('video'.localeCompare(sdpSection) === 0) {
+          } else if ("video".localeCompare(sdpSection) === 0) {
             if (mungeData.videoBitrate !== undefined) {
-              sdpStrRet += '\r\nb=CT:' + (mungeData.videoBitrate);
-              sdpStrRet += '\r\nb=AS:' + (mungeData.videoBitrate);
+              sdpStrRet += "\r\nb=CT:" + mungeData.videoBitrate;
+              sdpStrRet += "\r\nb=AS:" + mungeData.videoBitrate;
               if (mungeData.videoFrameRate !== undefined) {
-                sdpStrRet += '\r\na=framerate:' + mungeData.videoFrameRate;
+                sdpStrRet += "\r\na=framerate:" + mungeData.videoFrameRate;
               }
             }
             hitMID = true;
-          }
-          else if ('bandwidth'.localeCompare(sdpSection) === 0) {
+          } else if ("bandwidth".localeCompare(sdpSection) === 0) {
             let rtpmapID;
             rtpmapID = getrtpMapID(sdpLine);
             if (rtpmapID !== null) {
               let match = rtpmapID[2].toLowerCase();
-              if (('vp9'.localeCompare(match) === 0) || ('vp8'.localeCompare(match) === 0) || ('h264'.localeCompare(match) === 0) ||
-                ('red'.localeCompare(match) === 0) || ('ulpfec'.localeCompare(match) === 0) || ('rtx'.localeCompare(match) === 0)) {
+              if (
+                "vp9".localeCompare(match) === 0 ||
+                "vp8".localeCompare(match) === 0 ||
+                "h264".localeCompare(match) === 0 ||
+                "red".localeCompare(match) === 0 ||
+                "ulpfec".localeCompare(match) === 0 ||
+                "rtx".localeCompare(match) === 0
+              ) {
                 if (mungeData.videoBitrate !== undefined) {
-                  sdpStrRet += '\r\na=fmtp:' + rtpmapID[1] + ' x-google-min-bitrate=' + (mungeData.videoBitrate) + ';x-google-max-bitrate=' + (mungeData.videoBitrate);
+                  sdpStrRet +=
+                    "\r\na=fmtp:" +
+                    rtpmapID[1] +
+                    " x-google-min-bitrate=" +
+                    mungeData.videoBitrate +
+                    ";x-google-max-bitrate=" +
+                    mungeData.videoBitrate;
                 }
               }
 
-              if (('opus'.localeCompare(match) === 0) || ('isac'.localeCompare(match) === 0) || ('g722'.localeCompare(match) === 0) || ('pcmu'.localeCompare(match) === 0) ||
-                ('pcma'.localeCompare(match) === 0) || ('cn'.localeCompare(match) === 0)) {
+              if (
+                "opus".localeCompare(match) === 0 ||
+                "isac".localeCompare(match) === 0 ||
+                "g722".localeCompare(match) === 0 ||
+                "pcmu".localeCompare(match) === 0 ||
+                "pcma".localeCompare(match) === 0 ||
+                "cn".localeCompare(match) === 0
+              ) {
                 if (mungeData.audioBitrate !== undefined) {
-                  sdpStrRet += '\r\na=fmtp:' + rtpmapID[1] + ' x-google-min-bitrate=' + (mungeData.audioBitrate) + ';x-google-max-bitrate=' + (mungeData.audioBitrate);
+                  sdpStrRet +=
+                    "\r\na=fmtp:" +
+                    rtpmapID[1] +
+                    " x-google-min-bitrate=" +
+                    mungeData.audioBitrate +
+                    ";x-google-max-bitrate=" +
+                    mungeData.audioBitrate;
                 }
               }
             }
@@ -281,52 +322,52 @@ export function mungeSDPPublish(sdpStr, mungeData) {
       }
     }
 
-    if (browserDetails.browser === 'firefox' || browserDetails.browser === 'safari') {
-      if ( sdpLine.indexOf("c=IN") === 0 )
-      {
-        if ('audio'.localeCompare(sdpSection) === 0)
-        {
-          if (mungeData.audioBitrate !== '') {
+    if (
+      browserDetails.browser === "firefox" ||
+      browserDetails.browser === "safari"
+    ) {
+      if (sdpLine.indexOf("c=IN") === 0) {
+        if ("audio".localeCompare(sdpSection) === 0) {
+          if (mungeData.audioBitrate !== "") {
             let audioBitrate = parseInt(mungeData.audioBitrate) * 1000;
-            let audioBitrateTIAS = parseInt(mungeData.audioBitrate) * 1000 * 0.95 - (50 * 40 * 8);
-            sdpStrRet += "\r\nb=TIAS:"+audioBitrateTIAS+"\r\n";
-            sdpStrRet += "b=AS:"+audioBitrate+"\r\n";
-            sdpStrRet += "b=CT:"+audioBitrate+"\r\n";
+            let audioBitrateTIAS =
+              parseInt(mungeData.audioBitrate) * 1000 * 0.95 - 50 * 40 * 8;
+            sdpStrRet += "\r\nb=TIAS:" + audioBitrateTIAS + "\r\n";
+            sdpStrRet += "b=AS:" + audioBitrate + "\r\n";
+            sdpStrRet += "b=CT:" + audioBitrate + "\r\n";
           }
           continue;
         }
-        if ('video'.localeCompare(sdpSection) === 0)
-        {
-          if (mungeData.videoBitrate !== '') {
+        if ("video".localeCompare(sdpSection) === 0) {
+          if (mungeData.videoBitrate !== "") {
             let videoBitrate = parseInt(mungeData.videoBitrate) * 1000;
-            let videoBitrateTIAS = parseInt(mungeData.videoBitrate) * 1000 * 0.95 - (50 * 40 * 8);
-            sdpStrRet += "\r\nb=TIAS:"+videoBitrateTIAS+"\r\n";
-            sdpStrRet += "b=AS:"+videoBitrate+"\r\n";
-            sdpStrRet += "b=CT:"+videoBitrate+"\r\n";
+            let videoBitrateTIAS =
+              parseInt(mungeData.videoBitrate) * 1000 * 0.95 - 50 * 40 * 8;
+            sdpStrRet += "\r\nb=TIAS:" + videoBitrateTIAS + "\r\n";
+            sdpStrRet += "b=AS:" + videoBitrate + "\r\n";
+            sdpStrRet += "b=CT:" + videoBitrate + "\r\n";
           }
           continue;
         }
       }
     }
 
-    sdpStrRet += '\r\n';
+    sdpStrRet += "\r\n";
   }
   return sdpStrRet;
 }
 
 export function mungeSDPPlay(sdpStr) {
-
-  // For greatest playback compatibility, 
+  // For greatest playback compatibility,
   // force H.264 playback to constrained baseline (42e01f).
 
   let sdpLines = sdpStr.split(/\r\n/);
-  let sdpStrRet = '';
+  let sdpStrRet = "";
 
   for (var sdpIndex in sdpLines) {
     var sdpLine = sdpLines[sdpIndex];
 
-    if (sdpLine.length === 0)
-      continue;
+    if (sdpLine.length === 0) continue;
 
     if (sdpLine.includes("profile-level-id")) {
       // The profile-level-id string has three parts: XXYYZZ, where
@@ -334,30 +375,32 @@ export function mungeSDPPlay(sdpStr) {
       //   YY: constraint
       //   ZZ: level ID
       // Look for codecs higher than baseline and force downward.
-      let profileLevelId = sdpLine.substr(sdpLine.indexOf("profile-level-id")+17,6);
-      let profile = Number('0x'+profileLevelId.substr(0,2));
-      let constraint = Number('0x'+profileLevelId.substr(2,2));
-      let level = Number('0x'+profileLevelId.substr(4,2));
-      if (profile > 0x42)
-      {
+      let profileLevelId = sdpLine.substr(
+        sdpLine.indexOf("profile-level-id") + 17,
+        6
+      );
+      let profile = Number("0x" + profileLevelId.substr(0, 2));
+      let constraint = Number("0x" + profileLevelId.substr(2, 2));
+      let level = Number("0x" + profileLevelId.substr(4, 2));
+      if (profile > 0x42) {
         profile = 0x42;
-        constraint = 0xE0;
-        level = 0x1F;
+        constraint = 0xe0;
+        level = 0x1f;
       }
-      if (constraint === 0x00)
-      {
-        constraint = 0xE0;
+      if (constraint === 0x00) {
+        constraint = 0xe0;
       }
-      let newProfileLevelId = ("00" + profile.toString(16)).slice(-2).toLowerCase() +
+      let newProfileLevelId =
+        ("00" + profile.toString(16)).slice(-2).toLowerCase() +
         ("00" + constraint.toString(16)).slice(-2).toLowerCase() +
         ("00" + level.toString(16)).slice(-2).toLowerCase();
 
-      sdpLine = sdpLine.replace(profileLevelId,newProfileLevelId);
+      sdpLine = sdpLine.replace(profileLevelId, newProfileLevelId);
     }
 
     sdpStrRet += sdpLine;
-    sdpStrRet += '\r\n';
+    sdpStrRet += "\r\n";
   }
 
-  return sdpStrRet;  
+  return sdpStrRet;
 }

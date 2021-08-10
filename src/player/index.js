@@ -6,9 +6,9 @@ const Player = () => {
   const [websocket, setWebSocket] = useState();
   const [playSettings, setPlaySettings] = useState({
     playStart: true, // change to true to start playing,
-    signalingURL: 'wss://6110cd121a4ad.streamlock.net:449/webrtc-session.json',
-    applicationName: 'newapp',
-    streamName: 'live'
+    signalingURL: "wss://6110cd121a4ad.streamlock.net:449/webrtc-session.json",
+    applicationName: "newapp",
+    streamName: "live",
   });
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState();
@@ -17,14 +17,13 @@ const Player = () => {
   const [peerConnection, setPeerConnection] = useState();
 
   useEffect(() => {
-     
     if (playSettings.playStart && !connected) {
-        setPlaySettings({
-            playStart: false,
-        })
+      setPlaySettings({
+        playStart: false,
+      });
       startPlay(playSettings, websocket, {
         onError: (error) => {
-            console.log(error);
+          console.log(error);
           setError(error.message);
         },
         onConnectionStateChange: (result) => {
